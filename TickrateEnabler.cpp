@@ -81,11 +81,11 @@ float GetTickInterval()
 
 bool TickrateEnabler::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
 {
-	server = reinterpret_cast<IServerGameDLL*>(gameServerFactory("ServerGameDLL010", nullptr));
+	server = reinterpret_cast<IServerGameDLL*>(gameServerFactory("ServerGameDLL012", nullptr));
 
 	if (!server)
 	{
-		Warning("Failed to get a pointer on ServerGameDLL.");
+		Warning("Failed to get a pointer on ServerGameDLL.\n");
 		return false;
 	}
 
