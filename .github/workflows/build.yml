@@ -72,7 +72,7 @@ jobs:
       - name: Compiling
         working-directory: TickrateEnabler
         run: |
-          python3 configure.py --enable-optimize --symbol-files --sdks=css --target=x86 --tickrate=${{ matrix.tickrate }}
+          python3 configure.py --enable-optimize --symbol-files --sdks=css --targets=x86,x86_64 --tickrate=${{ matrix.tickrate }}
           ambuild objdir
           
       - name: Uploading package
