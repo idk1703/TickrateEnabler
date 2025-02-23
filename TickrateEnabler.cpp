@@ -81,7 +81,12 @@ float GetTickInterval()
 
 bool TickrateEnabler::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
 {
-	server = reinterpret_cast<IServerGameDLL*>(gameServerFactory("ServerGameDLL012", nullptr));
+	char version[64];
+	for(int i = 10; i <= 25; ++i)
+	{
+		snprintf(version, sizeof(version), "ServerGameDLL%03d", i);
+		if((server = reinterpret_cast<IServerGameDLL*>(gameServerFactory(version, nullptr))) != nullptr) break;
+	}
 
 	if (!server)
 	{

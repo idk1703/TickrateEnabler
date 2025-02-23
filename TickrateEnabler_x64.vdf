@@ -1,0 +1,5 @@
+"Plugin"
+{
+	"alias"		"TickrateEnabler"
+	"file"		"addons/x64/TickrateEnabler"
+}

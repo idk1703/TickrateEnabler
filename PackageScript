@@ -5,6 +5,14 @@ builder.SetBuildFolder('package')
 addons = builder.AddFolder('addons')
 
 builder.AddCopy(os.path.join(builder.sourcePath, 'TickrateEnabler.vdf'), addons)
+builder.AddCopy(os.path.join(builder.sourcePath, 'TickrateEnabler_x64.vdf'), addons)
+
+for cxx in VSP.all_targets:
+	if cxx.target.arch == 'x86_64':
+		bin64_folder = builder.AddFolder(os.path.join('addons', 'x64'))
 
 for task in VSP.binaries:
-  builder.AddCopy(task.binary, addons)
+	if task.target.arch == 'x86_64':
+		builder.AddCopy(task.binary, bin64_folder)
+	else:
+		builder.AddCopy(task.binary, addons)

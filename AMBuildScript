@@ -29,14 +29,19 @@ WinOnly = ['windows']
 WinLinux = ['windows', 'linux']
 WinLinuxMac = ['windows', 'linux', 'mac']
 
+SDK2013 = {
+  'windows': ['x86', 'x86_64'],
+  'linux': ['x86', 'x86_64'],
+}
+
 PossibleSDKs = {
   'episode1':  SDK('HL2SDK', '2.ep1', '1', 'EPISODEONE', WinLinux, 'episode1'),
   'ep2':  SDK('HL2SDKOB', '2.ep2', '3', 'ORANGEBOX', WinLinux, 'orangebox'),
-  'css':  SDK('HL2SDKCSS', '2.css', '6', 'CSS', WinLinuxMac, 'css'),
-  'hl2dm':  SDK('HL2SDKHL2DM', '2.hl2dm', '7', 'HL2DM', WinLinuxMac, 'hl2dm'),
-  'dods': SDK('HL2SDKDODS', '2.dods', '8', 'DODS', WinLinuxMac, 'dods'),
+  'css':  SDK('HL2SDKCSS', '2.css', '6', 'CSS', SDK2013, 'css'),
+  'hl2dm':  SDK('HL2SDKHL2DM', '2.hl2dm', '7', 'HL2DM', SDK2013, 'hl2dm'),
+  'dods': SDK('HL2SDKDODS', '2.dods', '8', 'DODS', SDK2013, 'dods'),
   'sdk2013': SDK('HL2SDK2013', '2.sdk2013', '9', 'SDK2013', WinLinuxMac, 'sdk2013'),
-  'tf2':  SDK('HL2SDKTF2', '2.tf2', '11', 'TF2', WinLinuxMac, 'tf2'),
+  'tf2':  SDK('HL2SDKTF2', '2.tf2', '11', 'TF2', SDK2013, 'tf2'),
   'l4d':  SDK('HL2SDKL4D', '2.l4d', '12', 'LEFT4DEAD', WinLinuxMac, 'l4d'),
   'nucleardawn': SDK('HL2SDKND', '2.nd', '13', 'NUCLEARDAWN', WinLinuxMac, 'nucleardawn'),
   'l4d2': SDK('HL2SDKL4D2', '2.l4d2', '15', 'LEFT4DEAD2', WinLinuxMac, 'l4d2'),
@@ -170,8 +175,11 @@ class VSPConfig(object):
         '-Wall',
         '-Werror',
         '-Wno-uninitialized',
+        '-Wno-sign-compare',
         '-Wno-unused',
         '-Wno-switch',
+        '-Wno-unknown-pragmas',
+        '-Wno-dangling-else',
         '-msse',
         '-fPIC',
       ]
@@ -189,6 +197,7 @@ class VSPConfig(object):
         '-fno-threadsafe-statics',
         '-Wno-non-virtual-dtor',
         '-Wno-overloaded-virtual',
+        '-Wno-register',
       ]
       if (cxx.version >= 'gcc-4.7' or cxx.family == 'clang'):
         cxx.cxxflags += ['-Wno-delete-non-virtual-dtor']
@@ -271,7 +280,7 @@ class VSPConfig(object):
 
     # Platform-specifics
     if cxx.target.platform == 'linux':
-      cxx.defines += ['_LINUX', 'POSIX', '_FILE_OFFSET_BITS=64']
+      cxx.defines += ['LINUX', '_LINUX', 'POSIX', '_FILE_OFFSET_BITS=64']
       if cxx.family == 'gcc':
         cxx.linkflags += ['-static-libgcc']
       elif cxx.family == 'clang':
@@ -321,7 +330,7 @@ class VSPConfig(object):
 
     compiler.defines += ['SOURCE_ENGINE=' + sdk.code]
 
-    if sdk.name in ['sdk2013', 'bms'] and compiler.like('gcc'):
+    if sdk.name in ['sdk2013', 'bms', 'tf2', 'css', 'dods', 'hl2dm'] and compiler.like('gcc'):
       # The 2013 SDK already has these in public/tier0/basetypes.h
       compiler.defines.remove('stricmp=strcasecmp')
       compiler.defines.remove('_stricmp=strcasecmp')
@@ -364,6 +373,11 @@ class VSPConfig(object):
         lib_folder = os.path.join(sdk.path, 'linux_sdk')
       elif sdk.name in ['sdk2013', 'bms']:
         lib_folder = os.path.join(sdk.path, 'lib', 'public', 'linux32')
+      elif sdk.name in ['css', 'hl2dm', 'dods', 'tf2']:
+        if compiler.target.arch == 'x86_64':
+          lib_folder = os.path.join(sdk.path, 'lib', 'public', 'linux64')
+        else:
+          lib_folder = os.path.join(sdk.path, 'lib', 'public', 'linux')
       elif compiler.target.arch == 'x86_64':
         lib_folder = os.path.join(sdk.path, 'lib', 'linux64')
       else:
@@ -417,9 +431,15 @@ class VSPConfig(object):
         libs.append('mathlib')
       for lib in libs:
         if compiler.target.arch == 'x86':
-          lib_path = os.path.join(sdk.path, 'lib', 'public', lib) + '.lib'
+          if sdk.name in ['css', 'hl2dm', 'dods', 'tf2']:
+            lib_path = os.path.join(sdk.path, 'lib', 'public', 'x86', lib) + '.lib'
+          else:
+            lib_path = os.path.join(sdk.path, 'lib', 'public', lib) + '.lib'
         elif compiler.target.arch == 'x86_64':
-          lib_path = os.path.join(sdk.path, 'lib', 'public', 'win64', lib) + '.lib'
+          if sdk.name in ['css', 'hl2dm', 'dods', 'tf2']:
+            lib_path = os.path.join(sdk.path, 'lib', 'public', 'x64', lib) + '.lib'
+          else:
+            lib_path = os.path.join(sdk.path, 'lib', 'public', 'win64', lib) + '.lib'
         binary.compiler.linkflags.append(lib_path)
 
     for library in dynamic_libs:
